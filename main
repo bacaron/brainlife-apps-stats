@@ -5,7 +5,9 @@ username=`jq -r '.username' config.json`
 password=`jq -r '.password' config.json`
 
 # create json of brainlife apps
-. grab_apps_json.sh ${topdir} ${username} ${password}
+if [[ ! -f ${topdir}/apps.json ]]; then
+	. ./grab_apps_json.sh ${topdir} ${username} ${password}
+fi
 
 # create dataframe containing all apps, repos, branches, containers, and software packages
 python3 brainlife_apps_containers_software.py
