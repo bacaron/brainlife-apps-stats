@@ -122,7 +122,7 @@ def find_filename(container,check_filename):
     return tmp
 
 # this function will check for common neuroimaging packages that have install locations not identified by syft. will probably need to continually update this with 
-# new software and versions
+# new software and versions 
 def check_neuroimage_package(df,package,container,check_command,check_file):
 
     if check_command == 'find':
@@ -132,12 +132,13 @@ def check_neuroimage_package(df,package,container,check_command,check_file):
 
     tmp = check_fsl_python(tmp)
 
-    found_by = 'brad-code'
+    found_by = 'manual-inspection'
 
     if package == 'qsiprep' or package == 'fmriprep' or package == 'mriqc':
         package_version = subprocess.run(["docker","run","--rm",container.split('docker://')[1],package,check_command],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         package_version = check_fsl_python(package_version).stdout.decode('utf-8').strip('\n').split(' ')
-        if package_version[-1]:
+        package_version = [ f for f in package_version if f != package ][-1]
+        if package_version:
             df = df.append({'package': package, 'version': package_version, 'found_by': found_by},ignore_index=True)
     elif package == 'freesurfer-stats':
         if tmp.stdout.decode('utf-8'):
@@ -172,7 +173,7 @@ def check_neuroimage_package(df,package,container,check_command,check_file):
             elif package == 'mrtrix':
                 tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],check_file,"--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-                tmp_vs = check_fsl_python(tmp).stdout.decode('utf-8').split('\n')
+                tmp_vs = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')
 
                 package_version = [ f for f in tmp_vs if check_file in f ][0].replace('==','').strip(' ').split(' ')[1]
             
