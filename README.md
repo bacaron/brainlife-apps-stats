@@ -7,7 +7,7 @@ This is intended to be used 1) as SBOM and 2) in combination with usage statisti
 WORK IN PROGRESS
 
 Directory structure:
-`
+```
   ./
   ├── apps_df.csv
   ├── brainlife_apps_containers_software.py
@@ -15,4 +15,4 @@ Directory structure:
   └── README.md
 
   0 directories, 4 files
-`
+```
