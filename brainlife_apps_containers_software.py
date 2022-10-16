@@ -88,6 +88,14 @@ def build_app_branches_df(owner,repo,main_file):
 
     return df
 
+# sometimes if container is a python container exclusively, this will cause failure. need to catch thi
+def check_if_python(tmp):
+
+    if 'Run a python command' in tmp.stdout.decode('utf-8'):
+        tmp.stdout = tmp.stdout.decode('utf-8').replace('\nUsage: docker run <imagename> COMMAND\n\nCommands\n\npython     : Run a python command\nbash       : Start a bash shell\nvtk_ccmake : Prepare VTK to build with ccmake. This happens in the container (not during image build)\nvtk_make   : Build the VTK library\nhelp       : Show this message\n\n','').encode()
+
+    return tmp
+
 # sometimes fsl containers output a warning message that screws with the code. this will
 # remove that message
 def check_fsl_citation(tmp):
@@ -97,7 +105,16 @@ def check_fsl_citation(tmp):
 
     return tmp
 
-# this function will find the exact location to a text file. mostly for fsl version
+# this wraps both the check functions to make easier to reimplement
+def check_fsl_python(tmp):
+
+    tmp = check_fsl_citation(tmp)
+
+    tmp = check_if_python(tmp)
+
+    return tmp
+
+# will find exact file location of a specific text file. useful for finding fslversion file
 def find_filename(container,check_filename):
 
     tmp = subprocess.run(["docker","run","--rm",container.split('docker://')[1],"find","/","-type","f","-name",check_filename],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -113,20 +130,20 @@ def check_neuroimage_package(df,package,container,check_command,check_file):
     else:
         tmp = subprocess.run(["docker","run","--rm",container.split('docker://')[1],check_command,check_file],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-    tmp = check_fsl_citation(tmp)
+    tmp = check_fsl_python(tmp)
 
     found_by = 'brad-code'
 
     if package == 'qsiprep' or package == 'fmriprep' or package == 'mriqc':
         package_version = subprocess.run(["docker","run","--rm",container.split('docker://')[1],package,check_command],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        package_version = check_fsl_citation(package_version).stdout.decode('utf-8').strip('\n').split(' ')
+        package_version = check_fsl_python(package_version).stdout.decode('utf-8').strip('\n').split(' ')
         if package_version[-1]:
             df = df.append({'package': package, 'version': package_version, 'found_by': found_by},ignore_index=True)
     elif package == 'freesurfer-stats':
         if tmp.stdout.decode('utf-8'):
             filepath = check_file+'/Pipfile'
             tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],"cat",filepath],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-            tmp_vs = check_fsl_citation(tmp_vs).stdout.decode('utf-8').split('\n')
+            tmp_vs = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')
             package_version = [ tmp_vs[f+1] for f in range(len(tmp_vs)) if 'freesurfer-stats' in tmp_vs[f] ][0].split(' ')[1]
             df = df.append({'package': package, 'version': package_version, 'found_by': found_by},ignore_index=True)
     else:    
@@ -138,42 +155,42 @@ def check_neuroimage_package(df,package,container,check_command,check_file):
                 filepath = filepath+'/VERSION'
                 tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],"cat",filepath],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-                package_version = check_fsl_citation(tmp_vs).stdout.decode('utf-8').split('\n')[-1]
+                package_version = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')[-1]
                 if not package_version:
                     tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],"mri_vol2vol","--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-                    package_version = check_fsl_citation(tmp_vs).stdout.decode('utf-8').split('\n')[0].split(' ')[-1]
+                    package_version = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')[0].split(' ')[-1]
                     if package_version == 'info)':
                         package_version = 'dev'
             
             elif package == 'connectome_workbench':
                 tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],check_file,"-version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                tmp_vs = check_fsl_citation(tmp_vs).stdout.decode('utf-8').split('\n')
+                tmp_vs = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')
 
                 package_version = [ f for f in tmp_vs if 'Version:' in f ][0].split('Version:')[1].strip(' ')
             
             elif package == 'mrtrix':
                 tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],check_file,"--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-                tmp_vs = check_fsl_citation(tmp).stdout.decode('utf-8').split('\n')
+                tmp_vs = check_fsl_python(tmp).stdout.decode('utf-8').split('\n')
 
                 package_version = [ f for f in tmp_vs if check_file in f ][0].replace('==','').strip(' ').split(' ')[1]
             
             elif package == 'dsistudio':
                 tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],check_file,"--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                package_version = check_fsl_citation(tmp_vs).stdout.decode('utf-8').split('\n')[0].split(': ')[-1]
+                package_version = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')[0].split(': ')[-1]
 
             elif package == 'pynets':
                 tmp_vs = subprocess.run(["docker","run","--rm",container.split('docker://')[1],check_file,"--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-                package_version = check_fsl_citation(tmp_vs).stdout.decode('utf-8').split('\n')[0].split(' ')[1]
+                package_version = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')[0].split(' ')[1]
             
             elif package == 'fsl':
                 tmp_vs = find_filename(container,'fslversion')
-                tmp_vs = check_fsl_citation(tmp_vs).stdout.decode('utf-8').split('\n')[:-1]
+                tmp_vs = check_fsl_python(tmp_vs).stdout.decode('utf-8').split('\n')[:-1]
 
                 package_version = subprocess.run(["docker","run","--rm",container.split('docker://')[1],"cat",tmp_vs[-1]],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                package_version = check_fsl_citation(package_version).stdout.decode('utf-8').split('\n')[0]
+                package_version = check_fsl_python(package_version).stdout.decode('utf-8').split('\n')[0]
                 
             df = df.append({'package': package, 'version': package_version, 'found_by': found_by},ignore_index=True)
 
