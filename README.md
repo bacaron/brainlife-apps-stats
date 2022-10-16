@@ -10,6 +10,7 @@ Directory structure:
 ```
 ./
 ├── apps.csv
+├── apps.json
 ├── brainlife_apps_containers_software.py
 ├── config.json_sample
 ├── grab_apps_json.sh
@@ -17,5 +18,5 @@ Directory structure:
 ├── README.md
 └── requirements.txt
 
-0 directories, 7 files
+0 directories, 8 files
 ```
