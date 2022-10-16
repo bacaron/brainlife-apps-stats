@@ -8,7 +8,7 @@ WORK IN PROGRESS
 
 Directory structure:
 ```
-  ./
+./
   ├── apps.csv
   ├── brainlife_apps_containers_software.py
   ├── config.json_sample
