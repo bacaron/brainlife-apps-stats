@@ -1,0 +1,11 @@
+#!/bin/bash
+
+topdir=`jq -r '.topdir' config.json`
+username=`jq -r '.username' config.json`
+password=`jq -r '.password' config.json`
+
+# create json of brainlife apps
+. grab_apps_json.sh ${topdir} ${username} ${password}
+
+# create dataframe containing all apps, repos, branches, containers, and software packages
+python3 brainlife_apps_containers_software.py
