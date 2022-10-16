@@ -106,8 +106,6 @@ def find_filename(container,check_filename):
 
 # this function will check for common neuroimaging packages that have install locations not identified by syft. will probably need to continually update this with 
 # new software and versions
-# NEED TO SOLVE REMAINING FREESURFER CONTAINERS (containers[20:28]) and FSL VERSIONS. HAVE FINISHED THROUGH FREESURFER 6. CONTAINERS
-
 def check_neuroimage_package(df,package,container,check_command,check_file):
 
     if check_command == 'find':
