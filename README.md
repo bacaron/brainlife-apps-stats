@@ -9,10 +9,13 @@ WORK IN PROGRESS
 Directory structure:
 ```
   ./
-  ├── apps_df.csv
+  ├── apps.csv
   ├── brainlife_apps_containers_software.py
+  ├── config.json_sample
   ├── grab_apps_json.sh
-  └── README.md
+  ├── main
+  ├── README.md
+  └── requirements.txt
 
-  0 directories, 4 files
+  0 directories, 7 files
 ```
