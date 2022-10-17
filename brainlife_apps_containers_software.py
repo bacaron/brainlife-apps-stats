@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import subprocess
 import shutil
+import json
 
 # this will create an apps dataframe from the apps_json
 def create_apps_dateframe(apps_json,outpath):
@@ -259,20 +260,27 @@ def identify_binaries(container):
     
     return df
 
-def main(apps_json_inpath,apps_df_outpath):
+def main():
+
+    with open('config.json','r') as config_f:
+        config = json.load(config_f)
+
+    apps_json_inpath = config['apps_json_inpath']
+    apps_df_outpath = config['apps_df_outpath']
 
     # load the apps dataframe. this is our input set of apps to 1) identify docker containers for and 2) identify installed software packages in docker container
     if os.path.isfile('apps.csv'):
         apps = pd.read_csv('apps.csv')
-    with open(apps_json_inpath,'r') as apps_f:
-        apps_json = json.load(apps_f)
+    else:
+        with open(apps_json_inpath,'r') as apps_f:
+            apps_json = json.load(apps_f)
 
-        # create apps dataframe
-        apps = create_apps_dateframe(apps_json,'apps.csv')
+            # create apps dataframe
+            apps = create_apps_dateframe(apps_json,'apps.csv')
 
     # build list of owners and repos to loop through
     owners = apps.owner.tolist()
-    repos = apps.repo.tolist()
+    repos = apps.app.tolist()
 
     # build_app_branches_df(owner,repo,main_file)
     apps_branches_containers = pd.DataFrame()
